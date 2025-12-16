@@ -356,6 +356,7 @@ in {
 
       xdg.configFile."ranger/rc.conf".source = ../files/rc.conf;
       xdg.configFile."ranger/commands.py".source = ../files/commands.py;
+      xdg.configFile."ranger/plugins/oscyank".source = pkgs.ranger-oscyank;
 
       systemd.user.startServices = lib.mkIf hostPlatform.isLinux "sd-switch";
 
