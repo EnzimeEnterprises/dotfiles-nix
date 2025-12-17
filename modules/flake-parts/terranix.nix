@@ -48,6 +48,16 @@
         '';
       };
 
+      packages.get-github-token = pkgs.writeShellApplication {
+        name = "get-github-token";
+        runtimeInputs = builtins.attrValues {
+          inherit (pkgs) jq gh;
+        };
+        text = ''
+          jq -n --arg secret "$(gh auth token)" '{"secret":$secret}'
+        '';
+      };
+
       packages.provide-tf-passphrase = pkgs.writeShellApplication {
         name = "opentofu-external-key-provider";
         runtimeInputs = builtins.attrValues {
