@@ -46,16 +46,16 @@ in {
       [ (lib.getExe self'.packages.get-clan-secret) "tailscale-oauth-client-id" ];
   };
 
-  data.external.tailscale-oauth-client-secret = {
+  data.external.tailscale-oidc-identity-token = {
     program =
-      [ (lib.getExe self'.packages.get-clan-secret) "tailscale-oauth-client-secret" ];
+      [ (lib.getExe self'.packages.get-clan-secret) "tailscale-oidc-identity-token" ];
   };
 
   provider.tailscale = {
     oauth_client_id =
       config.data.external.tailscale-oauth-client-id "result.secret";
-    oauth_client_secret =
-      config.data.external.tailscale-oauth-client-secret "result.secret";
+    oidc_identity_token =
+      config.data.external.tailscale-oidc-identity-token "result.secret";
   };
 
   resource.tailscale_tailnet_key.terraform = {
