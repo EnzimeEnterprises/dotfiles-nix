@@ -25,7 +25,6 @@ in {
 
   resource.null_resource."install-${hostname}" = {
     depends_on = [
-      "tailscale_tailnet_key.terraform"
       "tailscale_oauth_client.hoopsnake-${hostname}"
     ];
     provisioner.local-exec = {

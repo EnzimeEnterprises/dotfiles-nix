@@ -70,6 +70,7 @@
         };
 
         services.tailscale.authKeyFile = lib.mkForce null;
+        services.tailscale.oidc.enable = lib.mkForce false;
 
         zramSwap.enable = true;
         zramSwap.memoryPercent = 250;

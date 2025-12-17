@@ -71,7 +71,6 @@ in {
       instance_id = config.resource.vultr_instance.${hostname} "id";
     };
     depends_on = [
-      "tailscale_tailnet_key.terraform"
       "tailscale_oauth_client.hoopsnake-${hostname}"
     ];
     provisioner.local-exec = {

@@ -51,9 +51,16 @@ in {
     imports = [ shared ];
 
     config = lib.optionalAttrs (options ? clan) {
-      clan.core.vars.generators.tailscale = {
+      # Tailscale OIDC workload identity credential
+      # The client-id is created in the Tailscale admin console under
+      # "Trust credentials" -> "Credential" -> "OpenID Connect"
+      # See: https://tailscale.com/kb/1581/workload-identity-federation
+      clan.core.vars.generators.tailscale-oidc = {
         share = true;
-        prompts.auth-key.persist = true;
+        prompts.client-id = {
+          persist = true;
+          description = "Tailscale workload identity client ID (from admin console)";
+        };
       };
     };
   };

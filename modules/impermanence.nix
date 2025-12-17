@@ -61,8 +61,28 @@
       }];
     };
 
-    services.tailscale.authKeyFile =
-      config.clan.core.vars.generators.tailscale.files.auth-key.path;
+    # Tailscale OIDC workload identity authentication
+    # See: https://tailscale.com/kb/1581/workload-identity-federation
+    #
+    # Setup:
+    # 1. Create a workload identity credential in the Tailscale admin console
+    #    (Trust credentials -> Credential -> OpenID Connect)
+    # 2. Configure the OIDC issuer (GitHub Actions, GCP, Azure, etc.)
+    # 3. Run `clan vars set <hostname> tailscale-oidc/client-id` with the credential ID
+    #
+    # For deployment, the OIDC token can be provided via:
+    # - Token file at /run/tailscale-oidc-token (injected during deployment)
+    # - TAILSCALE_OIDC_TOKEN environment variable
+    # - GitHub Actions OIDC (automatic when deploying from GHA)
+    services.tailscale.oidc = {
+      enable = true;
+      clientIdFile =
+        config.clan.core.vars.generators.tailscale-oidc.files.client-id.path;
+      # Token file for deployment-time injection
+      tokenFile = "/run/tailscale-oidc-token";
+      ephemeral = false; # Persistent servers
+      preauthorized = true;
+    };
 
     services.syncthing.dataDir =
       "/persist${config.users.users.${user}.home}/Sync";

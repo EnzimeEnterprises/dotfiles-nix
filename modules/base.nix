@@ -95,6 +95,7 @@ in {
     "ghostty"
     "sops"
     "syncthing"
+    "tailscale-oidc"
     "termite"
     "variants"
     "vcs"

@@ -49,23 +49,18 @@ in {
   provider.tailscale.api_key =
     config.data.external.tailscale-api-key "result.secret";
 
-  resource.tailscale_tailnet_key.terraform = {
-    description = "Terraform";
-    expiry = 7776000; # 90 days
-    reusable = true;
-    preauthorized = true;
-    recreate_if_invalid = "always";
-
-    # We hardcode the machine as `sigma` as we don't have access to
-    # `hostname` however any machine would work as this is shared
-    # between all machines.
-    provisioner.local-exec = {
-      command =
-        "echo '${config.resource.tailscale_tailnet_key.terraform "key"}' | ${
-          lib.getExe clan
-        } vars set --debug sigma tailscale/auth-key";
-    };
-  };
+  # NOTE: Tailscale authentication is now handled via OIDC workload identity federation
+  # instead of auth keys. The workload identity credential must be created manually
+  # in the Tailscale admin console:
+  #
+  # 1. Go to https://login.tailscale.com/admin/settings/trust-credentials
+  # 2. Click "Credential" -> "OpenID Connect"
+  # 3. Configure the OIDC issuer (GitHub Actions recommended for deployments)
+  # 4. Set the subject claim pattern to match your deployment environment
+  # 5. Copy the Client ID and run:
+  #    clan vars set <hostname> tailscale-oidc/client-id
+  #
+  # See: https://tailscale.com/kb/1581/workload-identity-federation
 
   resource.tls_private_key.ssh_deploy_key = { algorithm = "ED25519"; };
 
