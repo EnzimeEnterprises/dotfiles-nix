@@ -41,13 +41,22 @@ in {
   terraform.required_providers.tailscale.source = "tailscale/tailscale";
   terraform.required_providers.tls.source = "hashicorp/tls";
 
-  data.external.tailscale-api-key = {
+  data.external.tailscale-oauth-client-id = {
     program =
-      [ (lib.getExe self'.packages.get-clan-secret) "tailscale-api-key" ];
+      [ (lib.getExe self'.packages.get-clan-secret) "tailscale-oauth-client-id" ];
   };
 
-  provider.tailscale.api_key =
-    config.data.external.tailscale-api-key "result.secret";
+  data.external.tailscale-oauth-client-secret = {
+    program =
+      [ (lib.getExe self'.packages.get-clan-secret) "tailscale-oauth-client-secret" ];
+  };
+
+  provider.tailscale = {
+    oauth_client_id =
+      config.data.external.tailscale-oauth-client-id "result.secret";
+    oauth_client_secret =
+      config.data.external.tailscale-oauth-client-secret "result.secret";
+  };
 
   resource.tailscale_tailnet_key.terraform = {
     description = "Terraform";
