@@ -5,6 +5,11 @@
     environment.systemPackages =
       builtins.attrValues { inherit (pkgs) apparency; };
 
+    launchd.user.agents.install-amphetamine = {
+      command = "${lib.getExe pkgs.mas} install 937984704";
+      serviceConfig.RunAtLoad = true;
+    };
+
     launchd.user.agents.install-flighty = {
       command = "${lib.getExe pkgs.mas} install 1358823008";
       serviceConfig.RunAtLoad = true;
