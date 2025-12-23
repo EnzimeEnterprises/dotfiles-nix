@@ -282,6 +282,10 @@ in {
           if [[ -d ~/.hishtory ]]; then
             source ${pkgs.hishtory}/share/hishtory/config.zsh
           fi
+        '' + lib.optionalString hostPlatform.isDarwin ''
+          # Add custom completions to fpath and load them
+          fpath=(${config.xdg.dataHome}/zsh/completions $fpath)
+          autoload -Uz _launchctl
         '';
 
         shellAliases = {
@@ -359,6 +363,9 @@ in {
             -c UpdateRemotePlugins \
             -c quit
         '';
+
+      xdg.dataFile."zsh/completions/_launchctl" =
+        lib.mkIf hostPlatform.isDarwin { source = ../files/completions/_launchctl; };
 
       xdg.configFile."ranger/rc.conf".source = ../files/rc.conf;
       xdg.configFile."ranger/commands.py".source = ../files/commands.py;

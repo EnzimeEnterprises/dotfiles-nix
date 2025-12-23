@@ -1,0 +1,294 @@
+#compdef launchctl
+
+# Tab completions for macOS launchctl
+
+_launchctl_domains() {
+  local domains=(
+    'system:System domain'
+    'user:User domain (use user/<uid>)'
+    'login:Login domain (use login/<asid>)'
+    'gui:GUI domain (use gui/<uid>)'
+    'pid:PID domain (use pid/<pid>)'
+  )
+  _describe -t domains 'domain' domains
+}
+
+_launchctl_services() {
+  local -a services
+  services=(${(f)"$(launchctl list 2>/dev/null | tail -n +2 | awk '{print $3}')"})
+  _describe -t services 'service' services
+}
+
+_launchctl_system_services() {
+  local -a services
+  services=(${(f)"$(launchctl print system 2>/dev/null | grep -E '^\s+[0-9]+' | awk '{print $2}' | sed 's/^system\///')"})
+  _describe -t services 'system service' services
+}
+
+_launchctl_user_services() {
+  local uid=$(id -u)
+  local -a services
+  services=(${(f)"$(launchctl print user/$uid 2>/dev/null | grep -E '^\s+[0-9]+' | awk '{print $2}' | sed "s/^user\/$uid\///")"})
+  _describe -t services 'user service' services
+}
+
+_launchctl_gui_services() {
+  local uid=$(id -u)
+  local -a services
+  services=(${(f)"$(launchctl print gui/$uid 2>/dev/null | grep -E '^\s+[0-9]+' | awk '{print $2}' | sed "s/^gui\/$uid\///")"})
+  _describe -t services 'gui service' services
+}
+
+_launchctl_domain_target() {
+  local uid=$(id -u)
+  local -a targets=(
+    "system/:System domain"
+    "user/$uid/:Current user domain"
+    "gui/$uid/:Current GUI domain"
+  )
+  _describe -t targets 'domain target' targets
+}
+
+_launchctl_service_target() {
+  local uid=$(id -u)
+  # Provide common service target prefixes
+  local -a prefixes=(
+    "system/:System services"
+    "user/$uid/:User services"
+    "gui/$uid/:GUI services"
+  )
+  _describe -t prefixes 'service target prefix' prefixes
+}
+
+_launchctl_signals() {
+  local -a signals=(
+    'SIGTERM:Terminate gracefully'
+    'SIGKILL:Force kill'
+    'SIGHUP:Hangup (reload config)'
+    'SIGINT:Interrupt'
+    'SIGQUIT:Quit'
+    'SIGUSR1:User signal 1'
+    'SIGUSR2:User signal 2'
+    'SIGSTOP:Stop process'
+    'SIGCONT:Continue process'
+  )
+  _describe -t signals 'signal' signals
+}
+
+_launchctl_plist_files() {
+  local -a plist_dirs=(
+    ~/Library/LaunchAgents
+    /Library/LaunchAgents
+    /Library/LaunchDaemons
+    /System/Library/LaunchAgents
+    /System/Library/LaunchDaemons
+  )
+  _files -g '*.plist'
+}
+
+_launchctl() {
+  local context state state_descr line
+  typeset -A opt_args
+
+  local -a commands=(
+    # Modern subcommands
+    'bootstrap:Bootstrap a domain or service into a domain'
+    'bootout:Boot out a domain or service from a domain'
+    'enable:Enable a service'
+    'disable:Disable a service'
+    'kickstart:Force a service to start'
+    'attach:Attach to a service for debugging'
+    'debug:Configure debugging for a service'
+    'kill:Send a signal to a service process'
+    'blame:Print why a service is running'
+    'print:Print domain or service information'
+    'print-cache:Print cached service information'
+    'print-disabled:Print disabled services'
+    'plist:Print a property list'
+    'procinfo:Print process information for a service'
+    'hostinfo:Print host information'
+    'resolveport:Resolve a Mach port name'
+    'limit:View or adjust resource limits'
+    'runstats:Print runtime statistics for a service'
+    'examine:Run launchd in examination mode'
+    'config:Modify persistent configuration options'
+    'dumpstate:Dump launchd state'
+    'dumpjpcategory:Dump job policy category for a service'
+    'reboot:Initiate a system reboot'
+    'bootshell:Bring up single-user boot shell'
+    'load:Load a configuration file (legacy)'
+    'unload:Unload a configuration file (legacy)'
+    'start:Start a service (legacy)'
+    'stop:Stop a service (legacy)'
+    'list:List services and information (legacy)'
+    'setenv:Set an environment variable (legacy)'
+    'unsetenv:Unset an environment variable (legacy)'
+    'getenv:Get an environment variable (legacy)'
+    'remove:Remove a service (legacy)'
+    'submit:Submit a job (legacy)'
+    'managerpid:Print the PID of launchd'
+    'manageruid:Print the UID of launchd'
+    'managername:Print the name of launchd'
+    'error:Look up error codes'
+    'variant:Print the launchd variant'
+    'version:Print the launchd version'
+    'help:Print help information'
+  )
+
+  _arguments -C \
+    '1:command:->command' \
+    '*::arg:->args'
+
+  case $state in
+    command)
+      _describe -t commands 'launchctl command' commands
+      ;;
+    args)
+      case $words[1] in
+        bootstrap)
+          _arguments \
+            '-p[Print service to bootstrap]' \
+            '-s[Only bootstrap the specified service]' \
+            '-S[Session type]:session type:(Aqua LoginWindow Background StandardIO System)' \
+            '1:domain target:_launchctl_domain_target' \
+            '*:plist file:_launchctl_plist_files'
+          ;;
+        bootout)
+          _arguments \
+            '1:service target:_launchctl_service_target' \
+            '*:plist file:_launchctl_plist_files'
+          ;;
+        enable|disable)
+          _arguments \
+            '1:service target:_launchctl_service_target'
+          ;;
+        kickstart)
+          _arguments \
+            '-k[Kill existing instance before starting]' \
+            '-p[Print the PID of the service]' \
+            '-s[Start the service suspended]' \
+            '1:service target:_launchctl_service_target'
+          ;;
+        attach)
+          _arguments \
+            '-k[Kill existing instance before attaching]' \
+            '-s[Start the service suspended]' \
+            '-x[Attach to xpcproxy]' \
+            '1:service target:_launchctl_service_target'
+          ;;
+        debug)
+          _arguments \
+            '--program[Path to program to debug]:program:_files' \
+            '--guard-malloc[Enable guard malloc]' \
+            '--malloc-stack-logging[Enable malloc stack logging]' \
+            '--malloc-nano-allocator[Enable malloc nano allocator]' \
+            '--debug-libraries[Use debug libraries]' \
+            '--introspection-libraries[Use introspection libraries]' \
+            '--NSZombie[Enable NSZombie]' \
+            '--32[Run as 32-bit]' \
+            '--stdin[Redirect stdin]:path:_files' \
+            '--stdout[Redirect stdout]:path:_files' \
+            '--stderr[Redirect stderr]:path:_files' \
+            '--environment[Set environment variable]:VAR=value' \
+            '1:service target:_launchctl_service_target'
+          ;;
+        kill)
+          _arguments \
+            '1:signal:_launchctl_signals' \
+            '2:service target:_launchctl_service_target'
+          ;;
+        blame)
+          _arguments \
+            '1:service target:_launchctl_service_target'
+          ;;
+        print)
+          _arguments \
+            '1:target:_launchctl_service_target'
+          ;;
+        print-cache|print-disabled)
+          _arguments \
+            '1:domain target:_launchctl_domain_target'
+          ;;
+        plist)
+          _arguments \
+            '--format[Output format]:format:(xml json)' \
+            '1:plist file:_launchctl_plist_files'
+          ;;
+        procinfo)
+          _arguments \
+            '1:pid:_pids'
+          ;;
+        limit)
+          _arguments \
+            '1:resource:(cpu filesize data stack core rss memlock maxproc maxfiles)'
+          ;;
+        runstats)
+          _arguments \
+            '1:service target:_launchctl_service_target'
+          ;;
+        config)
+          _arguments \
+            '1:setting:(system user)' \
+            '2:parameter:(umask path)'
+          ;;
+        dumpjpcategory)
+          _arguments \
+            '1:service target:_launchctl_service_target'
+          ;;
+        reboot)
+          _arguments \
+            '-s[Reboot to single user mode]' \
+            '1:reason:(halt logout apps firmware userspace system)'
+          ;;
+        load|unload)
+          _arguments \
+            '-w[Modify disabled state permanently]' \
+            '-F[Force load/unload]' \
+            '-S[Session type]:session type:(Aqua LoginWindow Background StandardIO System)' \
+            '-D[Search domain]:search domain:(system local network all user)' \
+            '*:plist file:_launchctl_plist_files'
+          ;;
+        start|stop)
+          _arguments \
+            '1:service:_launchctl_services'
+          ;;
+        list)
+          _arguments \
+            '1::service:_launchctl_services'
+          ;;
+        setenv)
+          _arguments \
+            '1:variable name' \
+            '2:value'
+          ;;
+        unsetenv|getenv)
+          _arguments \
+            '1:variable name'
+          ;;
+        remove)
+          _arguments \
+            '1:service:_launchctl_services'
+          ;;
+        submit)
+          _arguments \
+            '-l[Label]:label' \
+            '-p[Program]:program:_files' \
+            '-o[Stdout path]:path:_files' \
+            '-e[Stderr path]:path:_files' \
+            '*::program arguments:_files'
+          ;;
+        error)
+          _arguments \
+            '1:domain:(posix mach bootstrap)' \
+            '2:error code'
+          ;;
+        help)
+          _arguments \
+            '1::command:_describe -t commands "command" commands'
+          ;;
+      esac
+      ;;
+  esac
+}
+
+_launchctl "$@"
