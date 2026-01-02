@@ -170,6 +170,25 @@
             params.keep = "2";
           };
         }
+        {
+          id = "beancount-ledger";
+          name = "Beancount";
+          devices = {
+            hyperion-macos = {
+              path = "${config.users.users.${user}.home}/Documents/Beancount";
+            };
+            phi-nixos = {
+              path = "${config.users.users.${user}.home}/Documents/Beancount";
+            };
+            gaia = {
+              path = "/persist${config.users.users.${user}.home}/Documents/Beancount";
+            };
+          };
+          versioning = {
+            type = "simple";
+            params.keep = "5";
+          };
+        }
       ]);
 
       gui.user = hostname;

@@ -7,8 +7,9 @@ in {
       hostSuffix = "-macos";
       user = "enzime";
       system = "aarch64-darwin";
-      modules =
-        builtins.attrNames { inherit (modules) ai android laptop personal; };
+      modules = builtins.attrNames {
+        inherit (modules) ai android beancount laptop personal;
+      };
     }
     {
       host = "phi";
@@ -36,7 +37,7 @@ in {
       user = "enzime";
       system = "x86_64-linux";
       modules = builtins.attrNames {
-        inherit (modules) reflector hoopsnake impermanence vncserver;
+        inherit (modules) beancount reflector hoopsnake impermanence vncserver;
       };
     }
   ];
