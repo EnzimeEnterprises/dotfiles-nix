@@ -17,8 +17,8 @@ in {
       system = "x86_64-linux";
       modules = builtins.attrNames {
         inherit (modules)
-          android bluetooth deluge nextcloud personal printers restic samba
-          scanners sway wireless virt-manager;
+          android beancount bluetooth deluge nextcloud personal printers restic
+          samba scanners sway wireless virt-manager;
       };
       tags = [ "wireless-personal" ];
     }
