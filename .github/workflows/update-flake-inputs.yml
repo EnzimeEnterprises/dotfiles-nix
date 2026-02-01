@@ -1,0 +1,56 @@
+name: Update flake inputs
+
+on:
+  schedule:
+    # Run weekly on Sundays at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      inputs:
+        description: 'Space-separated list of inputs to update (leave empty to update all)'
+        required: false
+        default: ''
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.1
+
+      - uses: cachix/install-nix-action@v31.8.4
+        with:
+          install_url: https://releases.nixos.org/nix/nix-2.32.4/install
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update flake inputs
+        run: |
+          if [ -n "${{ github.event.inputs.inputs }}" ]; then
+            for input in ${{ github.event.inputs.inputs }}; do
+              nix flake update "$input"
+            done
+          else
+            nix flake update
+          fi
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'flake.lock: update inputs'
+          title: 'flake.lock: update inputs (${{ steps.date.outputs.date }})'
+          body: |
+            Automated flake input updates.
+
+            Run `nix flake update` locally to see what changed:
+            ```
+            nix flake update --recreate-lock-file
+            ```
+
+            Or view the diff in `flake.lock` above.
+          branch: update-flake-inputs
+          delete-branch: true
+          labels: dependencies
